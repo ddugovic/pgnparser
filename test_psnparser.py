@@ -1,8 +1,8 @@
 import unittest
-import pgn
+import psn
 
 def game_fixture():
-    game = pgn.PGNGame(
+    game = psn.PSNGame(
         'F/S Return Match',
         'Belgrade, Serbia Yugoslavia|JUG',
         '1992.11.04',
@@ -24,7 +24,7 @@ def game_fixture():
 
     return game
 
-PGN_TEXT = '''[Event "F/S Return Match"]
+PSN_TEXT = '''[Event "F/S Return Match"]
 [Site "Belgrade, Serbia Yugoslavia|JUG"]
 [Date "1992.11.04"]
 [Round "29"]
@@ -41,7 +41,7 @@ PGN_TEXT = '''[Event "F/S Return Match"]
 
 1. e4 e5 2. d4 d5 3. f3 1/2-1/2'''
 
-class PGNGame_Test(unittest.TestCase):
+class PSNGame_Test(unittest.TestCase):
     def test_init(self):
         game = game_fixture()
         assert game.event == 'F/S Return Match'
@@ -60,7 +60,7 @@ class PGNGame_Test(unittest.TestCase):
         assert game.fen == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R1BQKBNR'
 
 
-class PGN_Test(unittest.TestCase):    
+class PSN_Test(unittest.TestCase):    
     def test_next_token(self):
         '''Tests ``_next_token`` function'''
 
@@ -73,19 +73,19 @@ class PGN_Test(unittest.TestCase):
             '   '
         ]
 
-        token = pgn._next_token(lines)
+        token = psn._next_token(lines)
         assert token == '[Site "Belgrade, Serbia Yugoslavia|JUG"]'
         assert len(lines) == 5
 
-        token = pgn._next_token(lines)
+        token = psn._next_token(lines)
         assert token == '[Date "1234.32.32"]'
         assert len(lines) == 4
 
-        token = pgn._next_token(lines)
+        token = psn._next_token(lines)
         assert token == '1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0'
         assert len(lines) == 0
 
-        token = pgn._next_token(lines)
+        token = psn._next_token(lines)
         assert not token
     
     def test_pre_process_text(self):
@@ -98,7 +98,7 @@ class PGN_Test(unittest.TestCase):
         1. e4 e5 2. d4 d5 ;commentary
         3. f3 1/2-1/2'''
 
-        lines = pgn._pre_process_text(text)
+        lines = psn._pre_process_text(text)
         expt = ['[tag "value"]', '1. e4 e5 2. d4 d5', '3. f3 1/2-1/2']
         assert lines == expt
 
@@ -106,7 +106,7 @@ class PGN_Test(unittest.TestCase):
         '''Tests ``_parse_tag`` function'''
 
         token = '[Site "Belgrade, Serbia Yugoslavia|JUG"]'
-        tag, value = pgn._parse_tag(token)
+        tag, value = psn._parse_tag(token)
         assert tag == 'site'
         assert value == 'Belgrade, Serbia Yugoslavia|JUG'
 
@@ -114,7 +114,7 @@ class PGN_Test(unittest.TestCase):
         '''Tests ``_parse_moves`` function'''
 
         token = '1. e4 e5 2. Nf3 Nc6 3. Bb5 1/2-1/2'
-        moves = pgn._parse_moves(token)
+        moves = psn._parse_moves(token)
         assert moves == ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', '1/2-1/2']
 
     def test_parse_moves_with_commentary(self):
@@ -123,7 +123,7 @@ class PGN_Test(unittest.TestCase):
         token = '{start comment}1. e4{middlecomment}e5 2. {dunno}Nf3 Nc6' +\
                 ' 3. Bb5 1/2-1/2{end}'
 
-        moves = pgn._parse_moves(token)
+        moves = psn._parse_moves(token)
         expected = ['{start comment}', 'e4', '{middlecomment}', 'e5', '{dunno}', 
                     'Nf3', 'Nc6', 'Bb5', '1/2-1/2', '{end}']
         
@@ -139,29 +139,29 @@ class PGN_Test(unittest.TestCase):
         1. e4 e5 2. Nf3 Nc6 
         3. Bb5 1-0'''
 
-        games = pgn.loads(text)
+        games = psn.loads(text)
         assert len(games) == 1
 
     def test_dumps_single(self):
         '''Tests ``dumps`` function for a single game'''
         game = game_fixture()
-        dump = pgn.dumps(game)
+        dump = psn.dumps(game)
 
-        assert dump == PGN_TEXT
+        assert dump == PSN_TEXT
 
     def test_dumps_multi(self):
         '''Tests ``dumps`` function for a list of games'''
         games = [game_fixture(), game_fixture()]
-        dump = pgn.dumps(games)
+        dump = psn.dumps(games)
 
-        assert dump == PGN_TEXT+'\n\n\n'+PGN_TEXT
+        assert dump == PSN_TEXT+'\n\n\n'+PSN_TEXT
     
     def test_dumps_special(self):
         '''Tests ``dumps`` function with move commentary and null tag'''
-        game = pgn.PGNGame('XYZ')
+        game = psn.PSNGame('XYZ')
         game.moves = ['{comment}', 'e4', 'e5', '{in}', 'd4', '{lol}', '1-0']
 
-        dump = pgn.dumps(game)
+        dump = psn.dumps(game)
         first_expected = '[Event "XYZ"]\n[Site "?"]'
         last_expected = '{comment} 1. e4 e5 {in} 2. d4 {lol} 1-0'
         

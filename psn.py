@@ -22,27 +22,27 @@
 import re
 
 '''
-A simple PGN parser.
+A simple PSN parser.
 
-PGN (Portable Game Notation) is computer-processible format for recording chess
+PSN (Portable Game Notation) is computer-processible format for recording shogi
 games, both the moves and related data. 
 
 This module is based on features of others parser modules (such json and yaml).
 The basic usage::
 
-    import pgn
+    import psn
 
-    pgn_text = open('morphy.pgn).read()
-    pgn_game = pgn.PGNGame()
+    psn_text = open('morphy.psn').read()
+    psn_game = psn.PSNGame()
 
-    print pgn.loads(pgn_text) # Returns a list of PGNGame
-    print pgn.dumps(pgn_game) # Returns a string with a pgn game
+    print psn.loads(psn_text) # Returns a list of PSNGame
+    print psn.dumps(psn_game) # Returns a string with a psn game
 
 '''
 
-class PGNGame(object):
+class PSNGame(object):
     '''
-    Describes a single chess game in PGN format.
+    Describes a single shogi game in PSN format.
     '''
 
     TAG_ORDER = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result',
@@ -54,7 +54,7 @@ class PGNGame(object):
                                                          black=None,
                                                          result=None):
         '''
-        Initializes the PGNGame, receiving the requireds tags.
+        Initializes the PSNGame, receiving the requireds tags.
         '''
         self.event = event
         self.site = site
@@ -77,18 +77,18 @@ class PGNGame(object):
         return dumps(self)
 
     def __repr__(self):
-        return '<PGNGame "%s" vs "%s">' % (self.white, self.black)
+        return '<PSNGame "%s" vs "%s">' % (self.white, self.black)
 
 class GameStringIterator(object):
     """
         Iterator containing multiline strings
-        that represent games from a PGN file
+        that represent games from a PSN file
     """
 
     def __init__(self, file_name):
         """
             Args:
-                file_name (str): PGN file name
+                file_name (str): PSN file name
         """
         self.file_name = file_name
         self.file_iter = iter(open(self.file_name))
@@ -126,13 +126,13 @@ class GameStringIterator(object):
 
 class GameIterator(object):
     """
-        Iterator containing games from a PGN file
+        Iterator containing games from a PSN file
     """
 
     def __init__(self, file_name):
         """
             Args:
-                file_name (str): PGN file name
+                file_name (str): PSN file name
         """
         self.game_str_iterator = GameStringIterator(file_name)
 
@@ -163,7 +163,7 @@ def _pre_process_text(text):
 
 def _next_token(lines):
     '''
-    Get the next token from lines (list of text pgn file lines).
+    Get the next token from lines (list of text psn file lines).
 
     There is 2 kind of tokens: tags and moves. Tags tokens starts with ``[``
     char, e.g. ``[TagName "Tag Value"]``. Moves tags follows the example: 
@@ -234,7 +234,7 @@ def loads(text):
         if token.startswith('['):
             tag, value = _parse_tag(token)
             if not game or (game and game.moves):
-                game = PGNGame()
+                game = PSNGame()
                 games.append(game)
 
             setattr(game, tag, value)
@@ -245,7 +245,7 @@ def loads(text):
 
 def dumps(games):
     '''
-    Serialize a list os PGNGames (or a single game) into text format.
+    Serialize a list os PSNGames (or a single game) into text format.
     '''
     all_dumps = []
 
@@ -254,7 +254,7 @@ def dumps(games):
 
     for game in games:
         dump = ''
-        for i, tag in enumerate(PGNGame.TAG_ORDER):
+        for i, tag in enumerate(PSNGame.TAG_ORDER):
             if getattr(game, tag.lower()):
                 dump += '[%s "%s"]\n' % (tag, getattr(game, tag.lower()))
             elif i <= 6:

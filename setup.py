@@ -18,14 +18,14 @@ long_description = f.read()
 f.close()
 
 setup(
-    name = 'pgnparser',
+    name = 'psnparser',
     version = __version__,
     author = __author__,
     license='MIT License',
-    description = 'A python PGN parser',
+    description = 'A python PSN parser',
     long_description=long_description,
-    url = 'http://renatopp.com/pgnparser',
-    download_url = 'https://github.com/renatopp/pgnparser',
+    url = 'http://renatopp.com/psnparser',
+    download_url = 'https://github.com/renatopp/psnparser',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X',
@@ -41,6 +41,6 @@ setup(
         ('Topic :: Software Development :: Libraries :: Python Modules'),
         ('Topic :: Games/Entertainment'),
     ],
-    keywords='chess game pgn parser python',
-    py_modules=['pgn'],
+    keywords='shogi game psn parser python',
+    py_modules=['psn'],
     )

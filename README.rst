@@ -1,34 +1,34 @@
 ==========
-PGN Parser
+PSN Parser
 ==========
 
-A simple python PGN parser.
+A simple python PSN parser.
 
-PGN (Portable Game Notation) is computer-processible format for recording chess
+PSN (Portable Shogi Notation) is computer-processible format for recording shogi
 games, both the moves and related data. 
 
 This module is based on features of others python parser modules (such json and 
 yaml). The basic usage::
 
-    import pgn
+    import psn
 
-    pgn_text = open('morphy.pgn').read()
-    pgn_game = pgn.PGNGame()
+    psn_text = open('morphy.psn').read()
+    psn_game = psn.PSNGame()
 
-    print pgn.loads(pgn_text) # Returns a list of PGNGame
-    print pgn.dumps(pgn_game) # Returns a string with a pgn game
+    print psn.loads(psn_text) # Returns a list of PSNGame
+    print psn.dumps(psn_game) # Returns a string with a psn game
 
 **Note**:
 
 The above basic example doesn't work properly with huge files (hundreds of
 megabytes and more): reading the whole file at once is slow and uses much
-memory, pgn.loads(big_string) uses even more memory.
+memory, psn.loads(big_string) uses even more memory.
 
-To process huge PGN files, do it like this::
+To process huge PSN files, do it like this::
 
-    import pgn
+    import psn
 
-    for game in pgn.GameIterator("bigfile.pgn"):
+    for game in psn.GameIterator("bigfile.psn"):
         print game  # or do something else with it
 
 **Features**:
@@ -42,7 +42,7 @@ To process huge PGN files, do it like this::
   moves list.
 
 
-**PGN example**::
+**PSN example**::
 
     [Event "F/S Return Match"]
     [Site "Belgrade, Serbia Yugoslavia|JUG"]
