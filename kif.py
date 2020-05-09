@@ -22,54 +22,44 @@
 import re
 
 '''
-A simple PSN parser.
+A simple KIF parser.
 
-PSN (Portable Shogi Notation) is computer-processible format for recording shogi
+KIF (Kifu Notation) is computer-processible format for recording shogi
 games, both the moves and related data. 
 
 This module is based on features of others parser modules (such json and yaml).
 The basic usage::
 
-    import psn
+    import kif
 
-    psn_text = open('madoka.psn').read()
-    psn_game = psn.PSNGame()
+    kif_text = open('madoka.kif').read()
+    kif_game = kif.KIFGame()
 
-    print psn.loads(psn_text) # Returns a list of PSNGame
-    print psn.dumps(psn_game) # Returns a string with a psn game
+    print kif.loads(kif_text) # Returns a list of KIFGame
+    print kif.dumps(kif_game) # Returns a string with a kif game
 
 '''
 
-class PSNGame(object):
+KIF_ENCODING = '#KIF version=2.0 encoding=UTF-8'
+class KIFGame(object):
     '''
-    Describes a single shogi game in PSN format.
+    Describes a single shogi game in KIF format.
     '''
 
-    TAG_ORDER = ['Event', 'Venue', 'Date', 'Round', 'Sente', 'Gote', 'Result',
-                 'Annotator', 'PlyCount', 'TimeControl', 'Time', 'Termination',
-                 'Mode', 'SFEN']
+    TAG_ORDER = ['Venue', 'Date', 'TimeControl', 'Result', 'Sente', 'Gote']
+    TAG_LABEL = ['場所', '開始日時', '持ち時間', '手合割', '先手', '後手']
 
-    def __init__(self, event=None, venue=None, date=None, round=None, 
-                                                         sente=None,
-                                                         gote=None,
-                                                         result=None):
+    def __init__(self, venue=None, date=None, timecontrol=None, result=None, sente=None, gote=None):
+
         '''
-        Initializes the PSNGame, receiving the required tags.
+        Initializes the KIFGame, receiving the required tags.
         '''
-        self.event = event
         self.venue = venue
         self.date = date
-        self.round = round
+        self.timecontrol = timecontrol
+        self.result = result
         self.sente = sente
         self.gote = gote
-        self.result = result
-        self.annotator = None
-        self.plycount = None
-        self.timecontrol = None
-        self.time = None
-        self.termination = None
-        self.mode = None
-        self.sfen = None
 
         self.moves = []
     
@@ -77,18 +67,18 @@ class PSNGame(object):
         return dumps(self)
 
     def __repr__(self):
-        return '<PSNGame "%s" vs "%s">' % (self.sente, self.gote)
+        return '<KIFGame "%s" vs "%s">' % (self.sente, self.gote)
 
 class GameStringIterator(object):
     """
         Iterator containing multiline strings
-        that represent games from a PSN file
+        that represent games from a KIF file
     """
 
     def __init__(self, file_name):
         """
             Args:
-                file_name (str): PSN file name
+                file_name (str): KIF file name
         """
         self.file_name = file_name
         self.file_iter = iter(open(self.file_name))
@@ -106,7 +96,7 @@ class GameStringIterator(object):
         try:
             while True:
                 line = self.file_iter.next()
-                if line.startswith("[Event"):
+                if line.startswith("場所") or line.startswith("開始日時"):
                     if len(self.game_lines) == 0:
                         self.game_lines.append(line)
                         continue
@@ -126,13 +116,13 @@ class GameStringIterator(object):
 
 class GameIterator(object):
     """
-        Iterator containing games from a PSN file
+        Iterator containing games from a KIF file
     """
 
     def __init__(self, file_name):
         """
             Args:
-                file_name (str): PSN file name
+                file_name (str): KIF file name
         """
         self.game_str_iterator = GameStringIterator(file_name)
 
@@ -148,14 +138,13 @@ class GameIterator(object):
 
 def _pre_process_text(text):
     '''
-    This function is responsible for removal of end line commentarys 
-    (;commentary), blank lines and aditional spaces. Also, it converts 
-    ``\\r\\n`` to ``\\n``.
+    This function is responsible for removal of blank lines and aditional spaces.
+    Also, it converts ``\\r\\n`` to ``\\n``.
     '''
     text = re.sub(r'\s*(\\r)?\\n\s*', '\n', text.strip())
     lines = []
     for line in text.split('\n'):
-        line = re.sub(r'(\s*;.*|^\s*)', '', line)
+        line = re.sub(r'(\s*#.*|^\s*)', '', line)
         if line:
             lines.append(line)
     
@@ -163,20 +152,16 @@ def _pre_process_text(text):
 
 def _next_token(lines):
     '''
-    Get the next token from lines (list of text psn file lines).
-
-    There is 2 kind of tokens: tags and moves. Tags tokens starts with ``[``
-    char, e.g. ``[TagName "Tag Value"]``. Moves tags follows the example: 
-    ``P7g-7f P3c-3d P7f-7e``.
+    Get the next token from lines (list of text kif file lines).
     '''
     if not lines:
         return None
 
     token = lines.pop(0).strip() 
-    if token.startswith('['):
+    if '：' in token:
         return token
 
-    while lines and not lines[0].startswith('['):
+    while lines and not '：' in lines[0]:
         token += ' '+lines.pop(0).strip()
     
     return token.strip()
@@ -185,7 +170,8 @@ def _parse_tag(token):
     '''
     Parse a tag token and returns a tuple with (tagName, tagValue).
     '''
-    tag, value = re.match(r'\[(\w*)\s*(.+)', token).groups()
+    label, value = re.match(r'(\w+)：(.+)', token).groups()
+    tag = KIFGame.TAG_ORDER[KIFGame.TAG_LABEL.index(label)]
     return tag.lower(), value.strip('"[] ')
 
 def _parse_moves(token):
@@ -193,33 +179,25 @@ def _parse_moves(token):
     Parse a moves token and returns a list with movements
     '''
     moves = []
+    
     while token:
         token = re.sub(r'^\s*(\d+\.+\s*)?', '', token)
 
-        if token.startswith('{'):
-            pos = token.find('}')+1
-        else:
-            pos1 = token.find(' ')
-            pos2 = token.find('{')
-            if pos1 <= 0:
-                pos = pos2
-            elif pos2 <= 0:
-                pos = pos1
-            else:
-                pos = min([pos1, pos2])
-
+        pos = token.find('\n')
         if pos > 0:
-            moves.append(token[:pos])
+            move, clock = re.match(r'^\s*(?:\d+\s+(\S*)\s+(\S*))?', token[:pos]).groups()
+            moves.append(move) # ignore clock for now
             token = token[pos:]
         else:
-            moves.append(token)
+            move, clock = re.match(r'^\s*(?:\d+\s+(\S*)\s+(\S*))?', token).groups()
+            moves.append(move) # ignore clock for now
             token = ''
-    
+
     return moves
 
 def loads(text):
     '''
-    Converts a string ``text`` into a list of PSNGames
+    Converts a string ``text`` into a list of KIFGames
     '''
     games = []
     game = None
@@ -231,21 +209,21 @@ def loads(text):
         if not token:
             break
 
-        if token.startswith('['):
+        if '：' in token:
             tag, value = _parse_tag(token)
             if not game or (game and game.moves):
-                game = PSNGame()
+                game = KIFGame()
                 games.append(game)
 
             setattr(game, tag, value)
-        else:
+        elif token != '手数----指手---------消費時間--':
             game.moves = _parse_moves(token)
     
     return games
 
 def dumps(games):
     '''
-    Serialize a list of PSNGames (or a single game) into text format.
+    Serialize a list of KIFGames (or a single game) into text format.
     '''
     all_dumps = []
 
@@ -254,16 +232,15 @@ def dumps(games):
 
     for game in games:
         dump = ''
-        for i, tag in enumerate(PSNGame.TAG_ORDER):
+        for i, tag in enumerate(KIFGame.TAG_ORDER):
             if getattr(game, tag.lower()):
-                dump += '[%s "%s"]\n' % (tag, getattr(game, tag.lower()))
-            elif i <= 6:
-                dump += '[%s "?"]\n' % tag
+                label = KIFGame.TAG_LABEL[i]
+                dump += '%s：%s\n' % (label, getattr(game, tag.lower()))
         
-        dump += '\n'
-        for move in game.moves:
-            dump += move + ' '
+        dump += '手数----指手---------消費時間--\n'
+        for j, move in enumerate(game.moves):
+            dump += str(j+1) + '   ' + move + '\n'
             
         all_dumps.append(dump.strip())
             
-    return '\n\n\n'.join(all_dumps)
+    return KIF_ENCODING + '\n' + '\n\n\n'.join(all_dumps)

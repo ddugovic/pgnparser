@@ -49,11 +49,9 @@ class PSNGame_Test(unittest.TestCase):
         assert game.result == '1-0'
         assert game.annotator == 'Thomas Majewski'
         assert game.plycount == '176'
-        #assert game.timecontrol == '40/7200:3600'
-        #assert game.time == '12:32:43'
-        #assert game.termination == 'abandoned'
-        #assert game.mode == 'ICS'
-        #assert game.fen == 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R1BQKBNR'
+        assert game.timecontrol == '205200'
+        assert game.mode == 'OTB'
+        assert game.sfen == 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL'
 
 
 class PSN_Test(unittest.TestCase):    
