@@ -167,7 +167,7 @@ def _next_token(lines):
 
     There is 2 kind of tokens: tags and moves. Tags tokens starts with ``[``
     char, e.g. ``[TagName "Tag Value"]``. Moves tags follows the example: 
-    ``1. e4 e5 2. d4``.
+    ``P7g-7f P3c-3d P7f-7e``.
     '''
     if not lines:
         return None
