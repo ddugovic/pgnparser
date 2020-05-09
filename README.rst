@@ -33,7 +33,7 @@ To process huge PSN files, do it like this::
 
 **Features**:
 
-- Required tags: "Event", "Site", "Date", "Round", "White", "Black", and
+- Required tags: "Event", "Venue", "Date", "Round", "Sente", "Gote", and
   "Result".
 - Optional tags: "Annotator", "PlyCount", "TimeControl", "Time", "Termination", 
   "Mode", and "FEN".
@@ -45,11 +45,11 @@ To process huge PSN files, do it like this::
 **PSN example**::
 
     [Event "F/S Return Match"]
-    [Site "Belgrade, Serbia Yugoslavia|JUG"]
+    [Venue "Belgrade, Serbia Yugoslavia|JUG"]
     [Date "1992.11.04"]
     [Round "29"]
-    [White "Fischer, Robert J."]
-    [Black "Spassky, Boris V."]
+    [Sente "Fischer, Robert J."]
+    [Gote "Spassky, Boris V."]
     [Result "1/2-1/2"]
      
     1. e4 e5 2. Nf3 Nc6 3. Bb5 {This opening is called the Ruy Lopez.} 3... a6

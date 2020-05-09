@@ -24,7 +24,7 @@ import re
 '''
 A simple PSN parser.
 
-PSN (Portable Game Notation) is computer-processible format for recording shogi
+PSN (Portable Shogi Notation) is computer-processible format for recording shogi
 games, both the moves and related data. 
 
 This module is based on features of others parser modules (such json and yaml).
@@ -32,7 +32,7 @@ The basic usage::
 
     import psn
 
-    psn_text = open('morphy.psn').read()
+    psn_text = open('madoka.psn').read()
     psn_game = psn.PSNGame()
 
     print psn.loads(psn_text) # Returns a list of PSNGame
@@ -45,23 +45,23 @@ class PSNGame(object):
     Describes a single shogi game in PSN format.
     '''
 
-    TAG_ORDER = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result',
+    TAG_ORDER = ['Event', 'Venue', 'Date', 'Round', 'Sente', 'Gote', 'Result',
                  'Annotator', 'PlyCount', 'TimeControl', 'Time', 'Termination',
-                 'Mode', 'FEN']
+                 'Mode', 'SFEN']
 
-    def __init__(self, event=None, site=None, date=None, round=None, 
-                                                         white=None,
-                                                         black=None,
+    def __init__(self, event=None, venue=None, date=None, round=None, 
+                                                         sente=None,
+                                                         gote=None,
                                                          result=None):
         '''
-        Initializes the PSNGame, receiving the requireds tags.
+        Initializes the PSNGame, receiving the required tags.
         '''
         self.event = event
-        self.site = site
+        self.venue = venue
         self.date = date
         self.round = round
-        self.white = white
-        self.black = black
+        self.sente = sente
+        self.gote = gote
         self.result = result
         self.annotator = None
         self.plycount = None
@@ -69,7 +69,7 @@ class PSNGame(object):
         self.time = None
         self.termination = None
         self.mode = None
-        self.fen = None
+        self.sfen = None
 
         self.moves = []
     
@@ -77,7 +77,7 @@ class PSNGame(object):
         return dumps(self)
 
     def __repr__(self):
-        return '<PSNGame "%s" vs "%s">' % (self.white, self.black)
+        return '<PSNGame "%s" vs "%s">' % (self.sente, self.gote)
 
 class GameStringIterator(object):
     """
@@ -190,7 +190,7 @@ def _parse_tag(token):
 
 def _parse_moves(token):
     '''
-    Parse a moves token and returns a list with moviments
+    Parse a moves token and returns a list with movements
     '''
     moves = []
     while token:
@@ -245,7 +245,7 @@ def loads(text):
 
 def dumps(games):
     '''
-    Serialize a list os PSNGames (or a single game) into text format.
+    Serialize a list of PSNGames (or a single game) into text format.
     '''
     all_dumps = []
 
@@ -259,17 +259,9 @@ def dumps(games):
                 dump += '[%s "%s"]\n' % (tag, getattr(game, tag.lower()))
             elif i <= 6:
                 dump += '[%s "?"]\n' % tag
-
         
         dump += '\n'
-        i = 0
         for move in game.moves:
-            if not move.startswith('{'):
-                if i%2 == 0:
-                    dump += str(int(i/2)+1)+'. '
-                
-                i += 1
-
             dump += move + ' '
             
         all_dumps.append(dump.strip())
